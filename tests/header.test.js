@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
-
+const sessionFactory = require('./factories/sessionFactory');
+const userFactory = require('./factories/userFactory');
 let browser, page;
-
 
 beforeEach(async () => {
   browser = await puppeteer.launch({
@@ -12,7 +12,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  // await browser.close();
+  await browser.close();
 });
 
 test('header有文字', async () => {
@@ -26,22 +26,11 @@ test('登录oauth流程', async () => {
   expect(url).toMatch(/accounts\.google\.com/);
 });
 
-test.only('登陆后显示退出', async () => {
-  const id = '5b4e9f2a7b60c2782168d4b3';
-  const Buffer = require('safe-buffer').Buffer;
-  const sessionObj = {"passport":{"user":id}};
-  const sessionString = Buffer.from(JSON.stringify(sessionObj))
-      .toString('base64');
+test('登陆后显示退出', async () => {
+  const user = await userFactory();
+  const {session, sig} = sessionFactory(user);
 
-  const Keygrip = require('keygrip');
-  const keys = require('../config/keys');
-  const keygrip = new Keygrip([keys.cookieKey]);
-
-  const sig = keygrip.sign('session=' + sessionString);
-
-  console.log(sessionString, sig);
-  console.log(keys.cookieKey);
-  await page.setCookie({name: 'session', value: sessionString});
+  await page.setCookie({name: 'session', value: session});
   await page.setCookie({name: 'session.sig', value: sig});
   await page.goto('localhost:3000');
   await page.waitFor('a[href="/auth/logout"]');
