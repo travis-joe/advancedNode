@@ -60,3 +60,16 @@ describe('登录后', async () => {
     })
   })
 })
+
+describe('不登录', async () => {
+  test('不能发blog', async () => {
+    const result = await page.post('/api/blogs', {title: 'T', content: 'C'});
+
+    expect(result).toEqual({error: 'You must log in!'});
+  });
+  test('无法获取列表', async () => {
+    const result = await page.get('/api/blogs');
+
+    expect(result).toEqual({error: 'You must log in!'});
+  });
+});
